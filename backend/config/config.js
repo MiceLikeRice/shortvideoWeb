@@ -1,0 +1,28 @@
+module.exports={
+    development:{
+        database:{
+            host:"localhost",
+            port:3306,
+            user:"root",
+            password:"15908136150ll",
+            database:"swifttalk",
+        },
+        serve:{
+            port:50000,
+        },
+        privateKey:"baobao"
+    },
+    production:{
+        database:{
+            host:"localhost",
+            port:3306,
+            user:"root",
+            password:"15908136150ll",
+            database:"swifttalk",
+        },
+        serve:{
+            port:process.env.PORT || 80,
+        },
+        privateKey:"baobao"
+    }
+}
