@@ -1,7 +1,7 @@
 <template>
     <div class="slide-container">
         <video controls>
-            <source src="http://192.168.101.2:50000/api/video/download/1693737333156.mp4">
+            <source src="http://121.41.123.128:50000/api/video/download/1693737333156.mp4">
         </video>
     </div>
 </template>

@@ -104,9 +104,10 @@ export default {
     },
     data() {
         return {
+
             videoList:[
             ],
-            prefix : 'http://192.168.101.2:50000/api/video/download/',
+            prefix : 'http://121.41.123.128:50000/api/video/download/',
             reloadA:false,
             reloadB:false,
             slidePosition: { y: 0 },
