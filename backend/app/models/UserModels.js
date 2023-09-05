@@ -24,7 +24,7 @@ class UserModels {
             { expiresIn: "1d" }
           );
           console.log(token);
-          const query = "UPDATE user SET last_login_time = ?";
+          const query = "UPDATE user SET user_last_login_time = ?";
           const values = [new Date()];
           mysql.query(query, values, (error, results, fields) => {
             if (error) {

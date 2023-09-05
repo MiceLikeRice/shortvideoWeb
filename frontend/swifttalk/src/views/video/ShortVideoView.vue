@@ -1,6 +1,7 @@
 <template>
     <div>
         <video-box v-for="(video,index) in videoList"
+        :key="index"
         @video-click="play(index)" 
         :videoCover="'http://121.41.123.128:50000/api/image/download/'+video.videoCoverPath" 
         :playCount="video.videoPlayCount" 
@@ -8,7 +9,7 @@
         :messageCount="video.videoCommentsCount"
         :videoDescription="video.videoDescription" 
         :uploader="video.videoUploader" 
-        :videoPath="'http://121.41.123.128:50000/api/video/download/'+video.videoPath" :key="video.videoId"/>
+        />
     </div>
 </template>
 

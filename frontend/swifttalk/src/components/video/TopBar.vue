@@ -62,7 +62,7 @@
                 <img class="top-icon" src="./icon/TopBarIcon.svg" alt="">
             </div>
             <div id="menu-wrapper">
-                <div v-if="!this.$store.state.user" class="head-section">
+                <div v-if="!username" class="head-section">
                     <div @click="gotoUpload">
                         <div><img src="./icon/upload.svg" alt=""></div>
                         <span>上传</span>
@@ -76,14 +76,14 @@
                         <span>注册</span>
                     </div>
                 </div>
-                <div v-if="this.$store.state.user" class="head-section-login">
+                <div v-if="username" class="head-section-login">
                     <div class="my-avtar">
                         <img 
-                        :src="this.$store.state.user.avatarPath?
-                        this.$store.state.user.avatarPath:
+                        :src="avatarPath?
+                        avatarPath:
                         'default_avatar.jpeg'" 
                         alt="avatar"/>
-                        <span>{{ this.$store.state.user.username }}</span>
+                        <span>{{ username }}</span>
                         <div>
                             <div>
                                 <span>1</span>
@@ -162,15 +162,22 @@
     </div>
 </template>
 <script>
-
+import Cookies from 'cookies-js'
 export default {
     data(){
         return{
-            choosed:true
+            choosed:true,
+            username:null,
+            avatarPath:null,
         }
+    },
+    mounted(){
+        this.username=Cookies.get("username");
+        this.avatarPath=Cookies.get("avatarPath");
     },
     methods: {
         gotoUpload(){
+            if(!this.username)return
             this.$router.push("/upload");
         },
         clearInput() {
@@ -584,7 +591,7 @@ export default {
 }
 
 .top-nav {
-    height: 40px;
+    height: 50px;
     width: 100%;
     background-color: rgb(14, 14, 14);
     justify-content: space-between;

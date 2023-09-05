@@ -2,5 +2,6 @@
   "dependencies": {
     "vue-infinite-scroll": "^2.0.2",
     "vue-touch": "next"
-  }
+  },
+  "serve": "vue-cli-service serve --no-notify"
 }

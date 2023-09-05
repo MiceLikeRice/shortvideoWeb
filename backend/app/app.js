@@ -4,7 +4,6 @@ const config=require("../config/config")
 const console = require('console')
 const router=require("./routes/index");
 const bodyParser=require("body-parser");
-const MusicModel=require("./models/musicModels");
 const port=config.development.serve.port
 const app=express();
 app.use(cors());

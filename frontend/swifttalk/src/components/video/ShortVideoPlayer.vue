@@ -52,6 +52,7 @@
                 {{ description }}
             </div>
         </div>
+        <div class="tag">{{ tag }}</div>
     </div>
 </template>
   
@@ -101,22 +102,36 @@ export default {
         status: Number,
         change: Number,
         Reload: Boolean,
-        play: Boolean
+        play: Boolean,
+        tag:String,
+        distory:Boolean,
     },
     watch: {
+        distory(distory){
+            if(distory){
+                this.destroyVideo();
+            }
+        },
         Reload(reload) {
-            console.log("reload:", reload)
             if (reload) {
                 this.reloadVideo(this.videopath);
             }
+            else{
+                this.pause();
+            }
         },
         change(index) {
-            console.log("index=", index);
+            if(index!==this.status){
+                this.pause();
+            }
         },
         videopath(newPath) {
             this.reloadVideo(newPath); // 重新加载视频
-            this.play();
         },
+        play(){
+            this.playvideo();
+        },
+        
     },
     data() {
         return {
@@ -125,22 +140,36 @@ export default {
             currentIndex: 1,
             touchstartY: 0,
             thumbupTag: false,
+            videoLoaded: false
         }
     },
     created() {
         console.log(this.videopath);
     },
+    mounted(){
+        const videoElement = this.$refs.videoElement; // 获取视频元素的引用
+        videoElement.addEventListener('canplay', this.videoLoadedHandler);
+    },
     methods: {
-
+        videoLoadedHandler() {
+            this.videoLoaded = true;
+            this.playvideo();
+        },
+        playvideo(){
+            const videoElement = this.$refs.videoElement;
+            if(this.change===this.status&&videoElement.paused){
+                videoElement.play();
+                this.isPlaying=true;
+            }
+        },
         pause() {
             const videoElement = this.$refs.videoElement;
-            videoElement.load();
             videoElement.pause();
         },
         destroyVideo() {
             const videoElement = this.$refs.videoElement;
-            videoElement.pause();
             videoElement.removeAttribute("src");
+            videoElement.load();
         },
         reloadVideo(newPath) {
             this.destroyVideo();
@@ -149,7 +178,6 @@ export default {
             videoElement.load();
         },
         thumbsstart() {
-            console.log("start")
             this.thumbsupTag = false;
             setTimeout(() => this.thumbsupTag = true, 1000);
             const thumb = document.querySelector(".thumbsup-icon");
@@ -195,22 +223,25 @@ export default {
         togglePlay() {
             const video = this.$refs.videoElement;
             if (!this.isPlaying) {
-                video.play();
+                if(this.change===this.status&&video.paused){
+                    video.play();
+                    this.isPlaying = !this.isPlaying;
+                }
             } else {
                 video.pause();
+                this.isPlaying = !this.isPlaying;
             }
-            this.isPlaying = !this.isPlaying;
         }
 
-    },
-    beforeRouteLeave(to, from, next) {
-        document.body.style.overflow = 'auto';
-        next();
     },
 };
 </script>
   
 <style scoped>
+.tag{
+    position:fixed;
+    color:white;
+}
 .thumbsup-icon {}
 
 .thumbsup-icon.pulse {

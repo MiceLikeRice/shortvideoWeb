@@ -16,19 +16,21 @@
             @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="handleTouchEnd">
             <short-video-player @toggleComment="toggleComment" 
             v-if="loaded"
-            :videopath="prefix+this.videoList[videoIndexA].videoPath"
+            :videopath="videoList[videoIndexA]?prefix+videoList[videoIndexA].videoPath:null"
             avatarPath="titleicon.png"
-            :description="videoList[videoIndexA].videoDescription"
+            :description="videoList[videoIndexA]?videoList[videoIndexA].videoDescription:null"
             :fansCount="0"
-            :thumbsupCount="videoList[videoIndexA].videoThumbsupCount"
-            :commentCount="videoList[videoIndexA].videoCommentsCount"
+            :thumbsupCount="videoList[videoIndexA]?videoList[videoIndexA].videoThumbsupCount:null"
+            :commentCount="videoList[videoIndexA]?videoList[videoIndexA].videoCommentsCount:null"
             :starCount="0"
             :shareCount="0"
-            :uploaderName="videoList[videoIndexA].videoUploader"
+            :uploaderName="videoList[videoIndexA]?videoList[videoIndexA].videoUploader:null"
             :status="currentVideoIndex"
             :change="videoIndexA"
             :Reload="reloadA"
             :play="playA"
+            :distory="distoryA"
+            tag="A"
             />
         </div>
         <div class="slide-b"
@@ -49,6 +51,8 @@
             :change="videoIndexB"
             :Reload="reloadB"
             :play="playB"
+            :distory="distoryB"
+            tag="B"
             /> 
         </div>
         <div class="video-comment" :style="{ transition: commentIsDragging ? 'none' : 'height 0.3s ease-in-out' }"
@@ -65,8 +69,8 @@
                         <span style="float: right; font-size:10px;color:blanchedalmond"> 按热度</span>
                     </div>
                     <video-comment
-                    />
-                    <video-comment
+                    v-for="comment in comments" :key="comment.commentId"
+                    :thisComment="comment"
                     />
                 </div>
             </div>
@@ -104,9 +108,7 @@ export default {
     },
     data() {
         return {
-
-            videoList:[
-            ],
+            videoList:[],
             prefix : 'http://121.41.123.128:50000/api/video/download/',
             reloadA:false,
             reloadB:false,
@@ -115,11 +117,22 @@ export default {
             startY: 0,
             originalY: 0,
             loading: false,
+
+
             offsetA: 0,
             offsetB: 0,
+
+
+            playA:false,
+            playB:false,
+            distoryA:false,
+            distoryB:false,
             status: true, //false a  true b    
+            
             transitionTimeA: 0.3,
             transitionTimeB: 0.3,
+
+
             commentBoardY: 0,
             commentBoardStartY: 0,
             commentIsDragging: false,
@@ -129,45 +142,36 @@ export default {
             currentVideoIndex:0,
             up:true,
             down:false,
-            playA:false,
-            playB:false,
             loaded:false,
-
+            comments:[],
+            
         };
     },
     async created() {
-    
         await request.post("api/shortvideo/searchshortvideo")
-  .then((response) => {
-    this.videoList = response.data.row;
-    console.log(this.videoList);
-    // 在请求成功后再设置this.currentVideoIndex
-    this.currentVideoIndex = parseInt(this.$route.query.index, 10);
-    this.videoIndexA=this.currentVideoIndex;
-    this.videoIndexB=this.currentVideoIndex;
-    console.log(this.currentVideoIndex);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-
+        .then((response) => {
+            this.videoList = response.data.row;
+            console.log(this.videoList);
+            // 在请求成功后再设置this.currentVideoIndex
+            this.currentVideoIndex = parseInt(this.$route.query.index, 10);
+            this.videoIndexA=this.currentVideoIndex+1;
+            this.videoIndexB=this.currentVideoIndex;
+            console.log(this.currentVideoIndex);
+            this.loaded=true;
+        })
+        .catch((error) => {
+            console.error(error);
+        });
     },
     mounted() {
-        window.addEventListener('scroll', this.handleScroll);
-        this.reloadA=!this.reloadA;
         this.reloadB=!this.reloadB;
-        setTimeout(()=>{
-            this.loaded=true;
-            console.log("yes");
-        },500);
-        const slide=document.querySelector(".slide-container");     
-        slide.style.left="0px";
-    },
-    beforeDestroy() {
-        window.removeEventListener('scroll', this.handleScroll);
     },
     methods: {
         sendMessage(){
+            if(Cookies.get("username")===undefined){
+                alert("请先登录");
+                return;
+            }
             const input=document.querySelector("#input");
             console.log(input.value);
             console.log(this.videoList[this.currentVideoIndex]);
@@ -180,11 +184,13 @@ export default {
                 like_count:0,
                 dislike_count:0
             }
+
             console.log(comment);
             input.value="";
             request.post("/api/videocomment/insert/",comment)
             .then((response)=>{
                 console.log(response.data);
+                this.comments.push(comment);
             })
             .catch((error)=>{
                 console.log(error);
@@ -210,27 +216,28 @@ export default {
             this.isDragging = true;
             this.startY = event.touches[0].clientY;
             this.originalY = this.slidePosition.y;
+            this.distoryA=false;
+            this.distoryB=false;
         },
         handleTouchMove(event) {
-            console.log("a,b=",this.videoIndexA,this.videoIndexB)
             event.preventDefault();
             if (this.isDragging) {
                 const deltaY = event.touches[0].clientY - this.startY;
                 if (deltaY < 0) {
                     if (this.load(this.down)) {
                         if (this.status === false) { // a上b下
-                            console.log("1a上b下");
                             const slideB = document.querySelector(".slide-b");
                             this.offsetA = 0;
                             this.offsetB = slideB.clientHeight;
                             this.videoIndexB=this.currentVideoIndex+1;
+                            this.reloadB=true;
                         }
                         else if (this.status === true) { //a下b上
-                            console.log("2a下b上");
                             const slideA = document.querySelector(".slide-a");
                             this.offsetB = 0;
                             this.offsetA = slideA.clientHeight;
                             this.videoIndexA=this.currentVideoIndex+1;
+                            this.reloadA=true;
                         }
                     }
                     else {
@@ -241,18 +248,18 @@ export default {
                 else {
                     if (this.load(this.up)) {
                         if (this.status === false) { // a上b下 a b
-                            console.log("3a下b上");
                             const slideB = document.querySelector(".slide-b");
                             this.offsetA = 0;
                             this.offsetB = -slideB.clientHeight;
                             this.videoIndexB=this.currentVideoIndex-1;
+                            this.reloadB=true;
                         }
                         else if (this.status === true) { //a下b上
-                            console.log("4a上b下");
                             const slideA = document.querySelector(".slide-a");
                             this.offsetB = 0;
                             this.offsetA = -slideA.clientHeight;
                             this.videoIndexA=this.currentVideoIndex-1;
+                            this.reloadA=true;
                         }
                     }
                     else {
@@ -266,8 +273,6 @@ export default {
                 else {
                     this.slidePosition.y = this.originalY + deltaY;
                 }
-                this.reloadA=true;
-                this.reloadB=true;
             }
         },
         handleTouchEnd() {
@@ -283,7 +288,9 @@ export default {
                         this.transitionTimeB = 0.2;
                         this.transitionTimeA = 0.2;
                         this.currentVideoIndex=this.currentVideoIndex+1;
-                    }//a
+                        this.playA=!this.playA;
+                        this.distoryB=true;
+                    }
                     else {
                         this.offsetB = 0;
                         this.slidePosition.y = 0;
@@ -291,6 +298,8 @@ export default {
                         this.transitionTimeA = 0.2;
                         this.transitionTimeB = 0.2;
                         this.currentVideoIndex=this.currentVideoIndex+1;
+                        this.playB=!this.playB;
+                        this.distoryA=true;
                     }
                     this.status = !this.status;
                 } else if (!this.loading && this.slidePosition.y > this.$el.clientHeight * 0.4) {
@@ -304,6 +313,8 @@ export default {
                         this.transitionTimeA = 0.2;
                         this.currentVideoIndex=this.currentVideoIndex-1;
                         this.status=false;
+                        this.playA=!this.playA;
+                        this.distoryB=true;
                     }
                     //a
                     else {
@@ -314,20 +325,15 @@ export default {
                         this.transitionTimeB = 0.2;
                         this.currentVideoIndex=this.currentVideoIndex-1;
                         this.status=true;
-
-                    }
+                        this.playB=!this.playB;
+                        this.distoryA=true;
+                    }  
                 } else {
                     this.transitionTimeA = 0.3;
                     this.transitionTimeB = 0.3;
                     this.slidePosition.y = this.originalY;
                 }
                 this.isDragging = false;
-                if(this.status){
-                    this.playB=!this.playB;
-                }
-                else{
-                    this.playA=!this.playA;
-                }
             }
         },
         handleSlideBTransitionEnd() {
@@ -338,13 +344,6 @@ export default {
             const slideA = document.querySelector(".slide-b");
             slideA.style.display = "none";
         },
-        scrollUp() {
-
-        },
-        scrollDown() {
-
-        }
-        ,
         load(direction) {
             if(direction===this.up&&this.currentVideoIndex===0){
                 return false
@@ -386,6 +385,18 @@ export default {
             const commentBoard = document.querySelector(".video-comment");
             commentBoard.style.height = this.isMaskActive ? 0 : document.body.clientHeight*0.6 + "px";
             this.isMaskActive = !this.isMaskActive;
+            if(this.isMaskActive){
+                request.post("api/videocomment/search",{
+                    video_id:this.videoList[this.currentVideoIndex].videoId
+                })
+                .then((response)=>{
+                    this.comments=response.data.row;
+                    console.log(this.comments);
+                })
+                .catch((err)=>{
+                    console.log(err);
+                })
+            }
         },
     },
 };
@@ -537,7 +548,8 @@ body {
     width: 100%;
     height: 100vh;
     position: relative;
-    left: -100%;
+    left: 0px;
+    top:0px;
     transition: left 0.3s ease-in-out;
 }
 
